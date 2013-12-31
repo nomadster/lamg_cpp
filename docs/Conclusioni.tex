@@ -1,0 +1,48 @@
+\capitolo{Conclusioni}
+
+Gli obiettivi che questo lavoro si poneva era essenzialmente due:
+
+\begin{enumerate}
+\item costruire una specializzazione della classe astratta MCFLSSolver che implementasse le metodologie introdotte da O. E. Livne e A. Brandt, di cui ne esiste una implemntazione in Matlab~\cite{lamg_code}, in modo da poterle utilizzare all'interno dei codici per il Flusso di Costo Minimo sviluppati in Dipartimento;\\
+\\
+\item testarne la bontà e confrontarne le prestazioni con gli altri risolutori presenti nel framework.
+\end{enumerate}
+
+Per quanto riguarda il primo obiettivo questo può ritenersi raggiunto in quanto il codice compila senza errori all'interno del framework.
+
+Il secondo invece può ritenersi solo parzialmente raggiunto poiché è stato possibile ottenere solo dei risultati parziali che non sono stati quindi riportati.
+
+È significativo, per concludere, spendere qualche parola sugli strumenti esterni utilizzati, ossia Matlab e la libreria Blaze.
+\\
+Matlab è un linguaggio molto comodo quando si deve lavorare con le matrici.
+Nonostante la sintassi delle librerie Blaze sia semplice ed intuitiva, questa non può reggere il confronto con la semplicità con la quale vengono manipolate le matrici nell'ambiente Matlab.
+Ad esempio se \inlinecode{X} è un vettore con \inlinecode{n} componenti in Matlab è possibile invertire l'ordine di questi elementi con il comando
+\begin{codice}
+X(n:-1:1)
+\end{codice}
+
+È anche possibile utilizzare due vettori come subscripts per individuare una sottomatrice. 
+Se ad esempio \inlinecode{V} è un vettore ad \inlinecode{m} componenti e \inlinecode{W} uno ad \inlinecode{n} componenti è possibile individuare una sottomatrice di \inlinecode{A} utilizzando il comando
+\begin{codice}
+A(V,W)
+\end{codice}
+oppure
+\begin{codice}
+A(:,V) 
+\end{codice}
+dove l'operatore duepunti indica a Matlab di selezionare tutte le righe della matrice \inlinecode{A} per costruire la sottomatrice.
+
+O ancora è possibile scrivere
+\begin{codice}
+degree = sum(A ~= 0, 1)
+\end{codice}
+ed ottenere come risultato un vettore degree che contiene un numero di elementi pari alle righe della matrice \inlinecode{A}, ciascuno dei quali assume un valore pari al numero degli elementi nonzero della riga corrispondente.
+
+Questo, unito ad un uso eccessivo di factory all'interno del codice essenzialmente dovuto a necessità delle versioni precedenti di testare la bontà di differenti metodologie, ha reso il lavoro di comprensione del codice particolarmente articolato.
+
+La libreria Blaze comunque è in continuo sviluppo. 
+L'attuale versione fornisce supporto per la creazione di viste di tipo sottomatrice mediante l'utilizzo degli Smart Expression Templates, con comportamenti simili all'operatore parentesi di Matlab.
+
+Tale operazione, che attualmente è stata implementata manualmente nella classe MtxOps, è molto utile per eseguire in maniera efficiente le operazioni di Elimination e Aggregation
+
+Si procederà dunque ad investigare sull'efficacia del suo utilizzo in una delle prossime revisioni del codice.

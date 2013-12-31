@@ -1,0 +1,130 @@
+\capitolo{Il Framework MCFUniPi}
+\label{cap:Framework}
+
+Il framework nel quale è stato eseguito il porting è interamente scritto in C++.
+Il C++ è un linguaggio di programmazione general-purpose, con un'inclinazione alla programmazione di sistema che
+\begin{itemize}
+\item è una versione migliore di C;
+\item supporta l'astrazione dei dati;
+\item supporta la programmazione ad oggetti
+\item supporta la programmazione generica~\cite{Bjarne}.
+\end{itemize}
+
+Da oltre vent'anni è un punto di riferimento inossidabile nello sviluppo di tutti i sistemi commerciali di grosso calibro, sia per l'indiscussa qualità del linguaggio che per le innumerevoli librerie che lo accompagnano e che coprono ogni possibile area tecnico-scientifica.
+
+\sezione{La struttura}
+
+\begin{figure}%
+\centering
+\img{Grafica/classiFrameworkUNIPI}{0.8\textwidth}%
+\caption{Struttura del framework MCFUniPi}%
+\label{fig:MCFUniPi}%
+\end{figure}%
+
+Come vedremo più avanti il lavoro svolto è risultato in una nuova specializzazione della classe \emph{MCFLSSolver}.
+Questa classe astratta fa parte di un ampio framework la cui struttura è presentata in figura~\vref{fig:MCFUniPi}.
+La classe astratta \emph{IPClass} implementa vari algoritmi IP per problemi di programmazione lineare o di programmazione quadratica (convessa).
+Questa classe è da intendersi come base per lo sviluppo di algoritmi IP specializzati per problemi con particolare struttura della matrice dei coefficienti e fornisce una serie di metodi virtuali che definiscono l'interfaccia per le varie classi che la ereditano.\\
+\\
+La classe astratta \emph{MCFClass} fornisce un'interfaccia standard per i risolutori di problemi di flusso di costo minimo i quali devono essere implementati come classi derivate da essa.\\
+\\
+La classe \emph{MCFInPnt} implementa un solver di problemi di MCF usando differenti varianti di algoritmi di tipo IP, dove la soluzione del sistema~\eqref{eqn:IP} è affidata ad un generico solver di sistemi lineari definito dall'interfaccia \emph{MCFLSSolver}. MCFInPnt è conforme all'interfaccia standard definita da MCFClass ed utilizza gli algoritmi IP forniti da IPClass.
+
+\sottosezione{MCFLSSolver}
+La classe MCFLSSolver, diretta superclasse di quella implementata, definisce un'interfaccia, come richiesto dall'approccio IP utilizzato, per la risoluzione di sistemi nella forma\footnote{Questo sistema è identico al sistema~\eqref{eqn:IP}. Il cambio di nomi è stato fatto per rimanere coerenti con i nomi definiti dall'interfaccia}
+\begin{equation}
+\label{eqn:ADAT}
+(ADA^T)Res = RHS
+\end{equation}
+
+Tra le varie strutture dati che vengono utilizzate da questa classe per rappresentare il problema le più importanti sono:
+\begin{itemize}
+\item \texttt{cHpRow D}, un vettore di scalari rappresentante la diagonale della matrice D;
+\item \texttt{cHpRow RHS}, il termine noto del sistema;
+\item \texttt{Index n, Index m}, il numero di nodi e di archi del grafo;
+\item \texttt{cIndex\_Set Sn, cIndex\_Set En} due array di lunghezza \texttt{m} che rappresentano il nodo iniziale e finale, rispettivamente, di ciascun arco;
+\item \texttt{cHpRow Prcsn}, il vettore che indica la precisione richiesta per poter ritenere corretta la soluzione.
+\end{itemize}
+
+I metodi, tra i quali ve ne sono anche di virtuali puri per cui è necessaria una implementazine nella sottoclasse, sono
+\begin{itemize}
+\item \texttt{virtual void SetGraph()} fornisce le informazioni sulla topologia del grafo che dà la matrice di incidenza $A$. È giusto pensare che tale topologia cambi meno frequentemente, tra una chiamata e l'altra del metodo IP, rispetto agli altri elementi del sistema~\eqref{eqn:ADAT};
+
+\item \texttt{virtual bool SetD()} setta l'\texttt{m}-vettore \texttt{D} che contiene gli elementi della matrice diagonale \texttt{D}. Questo metodo deve essere chiamato solo dopo che è stato chiamato \texttt{SetGraph()} e prima di una chiamata a \texttt{SolveADAT()};
+
+\item \texttt{virtual void SetRHS()} setta l'\texttt{n}-vettore dei termini noti \texttt{RHS}. Anche questo metodo può essere chiamato solo dopo l'invocazione di \texttt{SetGraph()} e almeno una volta prima di \texttt{SolveADAT()};
+
+\item \texttt{virtual void SetPrcsn()} setta l'\texttt{n}-vettore Prcsn consentendo di determinare la bontà della soluzione. In particolare il sistema~\eqref{eqn:ADAT} può dirsi ben risolto se alla fine di \texttt{SolveADAT} si ha
+\begin{equation*}
+(ADA^T)Res = RHS+Prcsn
+\end{equation*}
+
+\item \texttt{virtual LSSStatus SolveADAT() = 0} dovrebbe, dopo che \texttt{D}, \texttt{RHS} e \texttt{Prcsn} sono stati settati, risolvere il sistema~\eqref{eqn:ADAT} con il grado di precisione richiesto.
+
+Se ciò è stato possibile ritorna \texttt{kOK (= 0)}, e non può essere più chiamato a meno che \texttt{SetD()} e/o \texttt{SetRHS()} non vengano reinvocati per modificare il valore della corrispondente variabile.
+
+Se si verifica un errore numerico fatale che impedisce al solver di raggiungere la precisione richiesta, e se non è possibile incrementare la precisione, anche con chiamate successive, viene restituito \texttt{kNError (= 2)} e il calcolo della soluzione viene immediatamente interrotto.
+
+Alternativamente il solver può fermarsi senza aver raggiunto la precisione richiesta perché, basandosi su una condizione specifica del solver, o ha deciso che la soluzione trovata è sufficientemente buona, o ha esaurito qualche risorsa (tempo, numero di iterazioni, \dots).
+
+In questo caso viene restituito \texttt{kLwPrcsn (= 1)}. Il chiamante può allora accettare la soluzione ed andare avanti oppure può chiamare di nuovo \texttt{SolveADAT()} con lo stesso \texttt{D} e lo stesso \texttt{RHS} per ottenere una soluzione più accurata.
+
+In questo caso, il valore iniziale dell’approssimazione con cui far ripartire il solver deve essere la stessa di quella ottenuta nella precedente chiamata (il metodo iterativo, cioè, può ripartire dalla sua ultima soluzione). 
+
+L’MCFLSSolver deve assicurare la seguente importante condizione: dopo un numero finito di chiamate a SolveADAT(), o si trova una soluzione con la precisione richiesta, e quindi si ritorna \texttt{kOk}, o si decide che tale precisione è impossibile da raggiungere e si restituisce \texttt{kNError}.
+
+\end{itemize}
+
+Il framework presenta già varie specializzazioni della classe MCFLSSolver come mostrato in figura~\vref{fig:specializzazioniDiMCFLSSolver}.\\
+\\
+\fig{Grafica/specializzazioniDiMCFLSSolver}{Le specializzazioni della classe MCFLSSolver presenti nel framework MCFUniPi}{fig:specializzazioniDiMCFLSSolver}
+
+La classe \texttt{MCFChlsk} risolve il sistema~\eqref{eqn:ADAT} attraverso la fattorizzazione (incompleta) di Cholesky, la quale è computazionalmente efficiente e numericamente stabile.\\ 
+\\
+Il metodo consiste, brevemente, nel trovare una fattorizzazione $M = LSL^T$ della matrice del sistema~\eqref{eqn:ADAT}, tale che L (detta fattore di Cholesky) sia una matrice unità triangolare inferiore ed S una matrice diagonale con elementi positivi.\\
+
+Una volta calcolata tale fattorizzazione, il sistema riguardante M può essere risolto con due sostituzioni in avanti su L. Se, l’efficienza e la stabilità rappresentano un punto di forza di tale tecnica, il fenomeno del fill-in ne rappresenta sicuramente uno svantaggio: una matrice sparsa M può avere, infatti, un fattore di Cholesky L denso.\\
+
+In generale, questo fenomeno non può essere evitato e quindi sono stati proposti metodi alternativi.\\
+\\
+Molti di questi metodi usano, per risolvere il sistema, un metodo del gradiente coniugato precondizionato (PCG)~\cite{KKT_frangio}.
+La classe \texttt{PCGLSSolver} implementa un algoritmo generico del PCG per risolvere il sistema~\eqref{eqn:ADAT}.
+
+La scelta del precondizionatore è importante: esso deve essere poco costoso da calcolare e da invertire, ma deve apportare una consistente riduzione del numero di iterazioni del gradiente coniugato richieste per approssimare la soluzione di~\eqref{eqn:ADAT}.
+
+Un generico PCGLSSolver implementa un semplice precondizionatore diagonale e lascia alle sue sottoclassi la possibilità di implementarne degli altri.\\
+\\
+La classe \texttt{PCGBCTLSSolver} deriva da PCGLSSolver e implementa un generico precondizionatore tree/BCT+diagonale per algoritmi PCG.
+Data una matrice $K = ADA^T$ , dove A è la matrice di incidenza di un grafo G, si vuole calcolare un precondizionatore $M$ tale che $M^{-1} \approx K^{-1}$ ma che sia facile e veloce da costruire. I precondizionatori implementati in questa classe si basano, principalmente, su due idee:
+\begin{enumerate}
+\item \label{sottografo} selezionare un grafo parziale $G'$ di $G$, ovvero un sottoinsieme dei suoi archi, così che la matrice
+\begin{equation*}
+K' = A'D'A'^T
+\end{equation*}
+dove $A'$ è la matrice di incidenza del grafo $G'$, e $D'$ è $D$ ristretta agli archi di $G'$, sia facile da invertire ma contenga molto dell'informazione di $K$;
+
+\item \label{cappa} dal momento che l'idea~\eqref{sottografo} potenzialmente tralascia una parte delle informazione in $K$, trovare un modo di aggiungere a $K'$ un'altra matrice $W$ tale che $K' + W$ sia ancora facile da invertire e $W$ tenga conto delle informazioni in $K- K'$.
+\end{enumerate}
+
+Diverse implementazioni sono fornite per ognuna di queste idee di base.
+Per quanto riguarda l'idea~\eqref{sottografo}
+\begin{itemize}
+\item si può selezionare un sottografo vuoto $G'$;
+\item si può scegliere $G'$ come albero di copertura di $G$;
+\item si può scegliere $G'$ come albero di copertura con l'aggiunta di altri archi allo scopo di farlo diventare un brother connected tree (BCT) di profondità 2. Gli archi aggiunti possono unire soltanto nodi fratelli, cioè figli dello stesso nodo, nell'albero originale e la rimozione di tutti i nodi  dell'albero di copertura originale deve lasciare una foresta.
+\end{itemize}
+
+Per quanto riguarda invece l'idea~\eqref{cappa}
+\begin{itemize}
+\item si può selezionare $W=0$;
+\item si può prendere $W = \rho diag(K -K')$, con $\rho$ parametro e $diag(K-K')$ la matrice diagonale avente come elementi quelli della diagonale di $K-K'$.
+\end{itemize}
+
+La classe \texttt{PCGBCTLSSolver} è comunque astratta, in quanto non implementa il modo di trovare un buon BCT, lasciando questo compito alle sottoclassi.\\
+\\
+La classe \texttt{KrskPCGBCTLSSolver} deriva da PCGBCTLSSolver ed implementa un'euristica basata su Kruskal che usa un ordinamento degli archi o una visita BF parametrizzata.\\
+\\
+La classe \texttt{PrimPCGBCTLSSolver}, sottoclasse di PCGBCTLSSolver, implementa un'euristica basata sul metodo di Prim~\cite{Prim_frangio}.\\
+\\
+Infine la classe \texttt{MCFMGLSSolver}, sottoclasse di MCFLSSolver, implementa un metodo multigrid che utilizza il metodo di Jacobi come smoother ed il full weight operator come operatore di restringimento.
+Il sistema del sottospazio più piccolo viene risolto in maniera diretta utilizzando la fattorizzazione incompleta di Cholesky.

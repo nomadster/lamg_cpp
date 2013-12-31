@@ -1,0 +1,280 @@
+\capitolo{Introduzione}
+\label{intro}
+
+\sezione{Flusso di costo minimo e metodi Interior Point}
+
+I problemi di flusso di costo minimo (\emph{Min Cost Flow}) costituiscono un'importante classe di problemi di ottimizzazione per i quali è utile sviluppare approcci risolutivi molto efficienti.
+Le sue applicazioni sono infatti molteplici.\\
+Consideriamo ad esempio un'impresa di produzione e distribuzione di un certo bene composta da diversi centri:
+
+\begin{itemize}
+	\item centri di \emph{produzione} in cui la merce, non solo transita, ma viene anche realizzata in quantità prefissata
+	\item centri di \emph{distribuzione} in cui il prodotto non si limita a transitare, ma viene anche consegnato in quantità prestabilita
+	\item centri di \emph{stoccaggio}  in cui il bene si limita a transitare
+\end{itemize}
+Com'è ragionevole pensare, gli impianti sono connessi fra loro attraverso una serie di collegamenti, ai quali è facile associare un costo di trasporto e, in determinati contesti, ulteriori informazioni circa la quantità massima e minima di prodotto trasportabile lungo essi. 
+
+Il problema che si va ad affrontare nasce dall'esigenza di determinare il modo più economico, rispetto ad una data funzione di costo, per trasportare le merci dagli impianti di produzione verso tutti i punti di distribuzione utilizzando una data rete di trasporto.
+
+Per slegarci dai dettagli non significativi delle applicazioni in cui sorgono questi problemi viene impiegata l’entità di rete, facilmente modellabile utilizzando i grafi.
+Sia dato dunque un grafo $G=(\N, \E)$ connesso, dove $\N$ è un insieme di $n$ nodi ed $\E$ un insieme di $m$ archi. Ad ogni nodo $i \in \N$ è associato un valore reale $b_i$, che rappresenta il bilancio del singolo nodo e che può assumere valore
+
+\begin{itemize}
+\item positivo, e in tal caso $i$ è un nodo di produzione;
+\item negativo, e in tal caso il nodo è un nodo distribuzione;
+\item nullo, ed in questo ultimo caso il nodo è un nodo di stoccaggio.
+\end{itemize}
+
+Ad ogni arco $\varepsilon_k = (i,j)$ viene associato un peso $\w_{ij}$, determinato da una opportuna funzione $\w\colon \E\to\Rp$, che indica il costo unitario da pagare per consentire a ciascuna singola unità di merce di attraversare l'arco.
+Ogni arco possiede inoltre delle capacità inferiori, $l_{ij}$, e superiori, $u_{ij}$.
+Queste capacità rappresentano la quantità minima o massima di merce che deve o può attraversare ciascuno degli arco del grafo.
+
+Nei problemi di flusso la domanda globale è uguale all'offerta globale. 
+In altri termini i bilanci di tutti i nodi devono soddisfare la relazione
+\begin{equation*}
+\label{eqn:Bilancio}
+\sum_{i \in \N} b_i = 0
+\end{equation*}
+
+Un vettore $x \in \R^n$ è un flusso sul grafo $G$ se rispetta i seguenti \emph{vincoli di conservazione del flusso}:
+\begin{equation*}
+\label{eqn:VincoliConservazioneFlusso}
+\sum_{(j,i) \in BS(i)} x_{ji} - \sum_{(i,j) \in FS(i)} x_{ij} = b_i  \quad \forall i \in \N
+\end{equation*}\\
+\\
+Un flusso diviene ammissibile se sono inoltre verificati i seguenti vincoli di capacità:
+\begin{equation*}
+l_{ij} \le x_{ij} \le u_{ij} \quad \forall (i,j) \in \E
+\end{equation*}\\
+\\
+Dato un flusso ammissibile il suo costo è dato dalla somma dei flussi degli archi per il loro costo unitario di attraversamento:
+
+\begin{equation*}
+\sum_{(i,j)\in \E} w_{ij} x_{ij}\\
+\end{equation*}\\
+\\
+Si arriva così alla formulazione del problema del flusso di costo minimo:
+\begin{equation}
+\label{eq:MCFex}
+\begin{split}
+\min \; \sum_{(i,j)\in \;\E}w_{ij}x_{ij} \; \\
+\sum_{(j,i)\;\in BS(i)}x_{ji}\;-\sum_{(i,j)\;\in FS(i)}x_{ij}\;=\;b_i\;\;\;\;\;\;i\in \N \\
+l_{ij}\leq x_{ij}\leq u_{ij} \; \; \; \; (i,j)\in \E \\
+\end{split}
+\end{equation}
+\\
+nel quale l'obiettivo è quello di minimizzare il costo totale sostenuto nel trasportare il flusso di merci dai punti in cui viene prodotto verso quelli in cui viene distribuito.\\
+\\
+
+Il problema può essere espresso in forma vettoriale come
+\begin{equation}
+\label{eqn:MCF-vect}
+\min\{ wx : Ex = b,\, l \leq x \leq u \}
+\end{equation}
+dove $E$ indica la matrice di incidenza del grafo $G$, $w$ il vettore dei pesi degli archi, $u$ e $l$ i vettori delle capacità superiori ed inferiori, $b$ il vettore dei bilanci dei nodi ed $x$ il vettore dei flussi.\\
+\\
+Il problema del flusso di costo minimo racchiude al suo interno un vasto numero di casistiche.\\
+In prima analisi, pur avendo qui discusso il caso di una rete di collegamento tra i centri di un'azienda, un problema di questo tipo può insorgere in altri tipi di rete, come una rete di comunicazione o una rete idraulica.
+Non solo, una modellazione di questo tipo è applicabile anche a situazioni che a prima vista potrebbero non apparire immediatamente riconducibili a problemi di flusso.\\
+
+Si consideri ad esempio il caso di una compagnia aerea che deve stabilire i turni del personale di terra in base al flusso di passeggeri durante le ore della giornata, rispettando le normative contrattuali che prevedono vincoli sulla durata delle turnazioni, sul numero di unità di personale ogni quantitativo prestabilito di passeggeri e sulla retribuzione dei turni.
+Seppur evidentemente lontano dalla nozione di rete, è possibile ricondurre questo problema ad uno di flusso di costo minimo~\cite{Turni}.\\
+\\
+Istanze di questo problema emergono infine, molto spesso, anche come sottomodelli di problemi più complessi~\cite{MCF_appl}.
+
+
+La grande applicabilità di questi problemi è sottolineata anche dall'enorme quantità di ricerca che è stata dedicata allo sviluppo di algoritmi efficienti per la loro risoluzione, sia attraverso la specializzazione di algoritmi di \emph{Programmazione Lineare}, come il metodo del Simplesso, che attraverso lo sviluppo di approcci ad-hoc.\\
+\\
+Rientrano in questa seconda categoria i metodi \emph{interior point} (IP) i quali hanno ottenuto una reputazione di algoritmi efficienti per la risoluzione di grandi istanze di problemi.\\
+\\
+Ad ogni iterazione di questi metodi si devono risolvere sistemi lineari della forma
+
+\begin{equation}
+\label{eqn:IP}
+(E \Theta E^T ) x = b
+\end{equation}
+dove $E$ è fissata mentre $b \in \R^n$ e la matrice diagonale $\Theta$, di dimensioni $m \times m$ e definita positiva, dipendono dall'iterazione e dal metodo IP scelto.\\
+\\
+I solver \emph{general purpose} di questa famiglia utilizzano dei metodi diretti per il calcolo \emph{esatto} (a meno dell'errore di rappresentazione) della soluzione. Tipicamente viene utilizzata la fattorizzazione di Cholesky preceduta da applicazioni di euristiche di riordinamento delle colonne della matrice $E$ in modo da minimizzare il fill-in ma, in caso di reti molto grandi e sparse questo approccio risulta inefficiente poiché il fenomeno non può essere mitigato~\cite{MGM_frangio}.\\
+È quindi necessario utilizzare metodi iterativi per il calcolo \emph{approssimato} della soluzione, ma questi risultano competitivi soltanto nei casi in cui la velocità di convergenza sia sufficientemente alta.\\
+Rientrano tra questi metodi quelli cosidetti del \emph{gradiente coniugato precondizionato} (PCG) nei quali si risolve il sottosistema
+
+\begin{equation}
+(E_S \Theta_S E_S^T )x_S = b_S
+\end{equation}
+dove $E_S$ e $\Theta_S$ sono restrizioni di $E$ e $\Theta$ ottenute utilizzando un opportuno sottografo $S$ del grafo di partenza, come ad esempio un albero di copertura~\cite{KKT_frangio} o un albero brother-connected (BCT)~\cite{Prim_frangio}.\\
+I metodi PCG che utilizzano questi approcci funzionano bene per la maggior parte dei casi, ma in alcune applicazioni la velocità di convergenza tende ad essere bassa.
+In questi casi i metodi multigrid si presentano come una valida alternativa.\\
+
+\clearpage
+\sezione{Il metodo multigrid}
+
+Se si analizza la velocità di convergenza dei metodi iterativi classici, come ad esempio il metodo di Jacobi o quello di Gauss-Seidel, si può notare come l'errore $e = x - \tilde{x}$, che si commette ad approssimare la soluzione $x$ con $\tilde{x}$, descresca molto rapidamente nelle prime iterazioni per poi rallentare.
+Questo è dovuto al fatto che l'errore si annulla molto rapidamente nello spazio delle alte frequenze mentre persiste in quello delle basse frequenze.\\
+Proprio per questa caratteristica i metodi iterativi classici tendono a far assumere all'errore una forma \emph{smooth} (figura~\vref{fig:smooth}).
+
+\fig{Grafica/smoother.pdf}{Errore iniziale (tratteggiata) e dopo 15 passi del metodo di Gauss-Seidel (piena)}{fig:smooth}
+
+Questa proprietà viene sfruttata dai metodi multigrid per la minimizzazione dell'errore nelle alte frequenze mentre per minimizzare quello nelle basse frequenze si usa un metodo di proiezione che prende il nome di \emph{coarse grid correction} (CGC).
+
+Sia
+\begin{equation}
+\label{eqn:sisteman}
+A_nx_n = b_n
+\end{equation}
+il sistema~\eqref{eqn:IP} riscritto in modo da evidenziare la dimensione $n$ dello spazio a cui appartiene, con $A_n = (E_n \Theta_n E_n^T )$.
+E sia $\bar{x}_n$ la soluzione approssimata ottenuta utilizzando un metodo iterativo classico come smoother.
+L'errore introdotto da questa soluzione è pari a
+\begin{equation}
+\label{eqn:erroren}
+e_n = x_n - \bar{x}_n
+\end{equation}
+ed il residuo misura 
+\begin{equation}
+\label{eqn:residuon}
+r_n = b_n -A_n \bar{x}_n = A_n x_n - A_n \bar{x}_n
+\end{equation}
+Dalle equazioni~\eqref{eqn:erroren} e~\eqref{eqn:residuon} si ottiene il nuovo sistema
+\begin{equation}
+\label{eqn:sistemaErrore}
+A_n e_n = r_n
+\end{equation}
+che una volta risolto ci conduce alla soluzione esatta di~\eqref{eqn:sisteman} mediante
+\begin{equation}
+\label{eqn:diretta}
+x_n = \bar{x}_n + e_n
+\end{equation}
+
+Il sistema~\eqref{eqn:sistemaErrore} non è più facile da risolvere rispetto all'originale~\eqref{eqn:sisteman}, ma è possibile sfruttarne un'importante caratteristica.
+Applicando infatti $\nu$ passaggi di un metodo iterativo classico al sistema nella forma~\eqref{eqn:IP}, partendo da un'arbitraria approssimazione iniziale $x_0$, è possibile rendere l'errore smooth.
+Tale proprietà permette di poter proiettare l'errore in modo soddisfacente su uno spazio di dimensione $k$ minore rispetto all'originale e risolvere in tale spazio il sistema~\eqref{eqn:sistemaErrore}.
+Riproiettando poi nello spazio di partenza la soluzione dell'errore ottenuta nello spazio più piccolo, tramite l'equazione~\eqref{eqn:diretta}, è possibile determinare una nuova soluzione approssimata più precisa rispetto ad $\bar{x}_n$.
+Il metodo multigrid (MGM) è dunque un metodo iterativo che può essere visto come la composizione di almeno due distinti metodi iterativi con comportamenti spettrali di tipo complementare.\\
+\\
+La procedura sopra descritta lascia ancora aperte alcune importanti questioni:
+\begin{itemize}
+\item come poter trasferire il residuo da uno spazio $\Omega_n$ ad uno di dimensioni inferiori $\Omega_k$;
+\item come poter determinare, con lo scopo di ottenere un sistema analogo a~\eqref{eqn:sistemaErrore} ma definito su $\Omega_k$, la matrice dei coefficienti $A_k$;
+\item come poter riproiettare l'errore stimato in $\Omega_k$ al livello superiore $\Omega_n$.
+\end{itemize}
+
+
+\sottosezione{Operatori di restringimento}
+Per l'implementazione della coarse grid correction, come si è detto, è necessario determinare una funzione lineare che permetta di proiettare il residuo $r_n$ da uno spazio $\Omega_n$ ad uno di dimensioni inferiori $\Omega_k$.
+Sia $G(\Omega)$ l'insieme delle funzioni definite su un generico spazio $\Omega$. L'operatore di restrizione è definito come
+\begin{equation*}
+R_n : G(\Omega_n) \to G(\Omega_k)
+\end{equation*}
+ed il residuo proiettato dallo spazio più grande a quello più piccolo è dato da
+\begin{equation*}
+r_k = R_nr_n
+\end{equation*}
+La scelta di questo operatore dipende dall'applicazione che se ne vuole fare. 
+Nell'ambito della risoluzione di problemi legati alle equazioni differenziali viene adoperato il cosidetto \emph{full weight operator} per le sue ottime performance.
+Nell'ambito della risoluzione di problemi di grafo invece, tale operatore non si comporta altrettanto bene~\cite{fiderio}.
+Nel nostro caso è necessario scegliere operatori che mantengano la struttura di grafo della matrice dei coefficienti~\cite{MGM_frangio}.
+
+\sottosezione{Operatori di prolungamento}
+La seconda classe di funzioni di trasferimento riguarda la proiezione del vettore errore dallo spazio più piccolo $\Omega_k$ a quello di dimensioni superiori $\Omega_n$.
+Definendo l'operatore di prolungamento come
+\begin{equation*}
+P_n : G(\Omega_k) \to G(\Omega_n)
+\end{equation*}
+l'errore proiettato sarà
+\begin{equation*}
+e_n = P_n e_k
+\end{equation*}
+
+Questa procedura, molto comune in analisi numerica, prende il nome di \emph{interpolazione}.
+Come operatore di prolungamento si può utilizzare qualsiasi tecnica di interpolazione ma in genere, per la sua semplicità e per il fatto che offra risultati più che soddisfacenti, viene di solito impiegata l'interpolazione lineare~\cite{MGM_web_tut}.
+
+L'operatore di interpolazione lineare è così definito:
+\begin{equation}
+e_{n,j} = 
+\begin{cases}
+\frac{1}{2}(e_{k,i-1} + e_{k,i}) & \text{per } j = 2i +1\\
+e_{k,i} & \text{per } j=2i
+\end{cases},
+i = 0,\dots,k-1
+\end{equation}
+
+È utile far notare che se l'errore in $\Omega_n$ è un vettore smooth e se si conosce un'approssimazione esatta dell'errore du $\Omega_k$, allora l'interpolazione di tale approssimazione sullo spazio $\Omega_n$ è anch'essa smooth. Al contrario, se l'errore di partenza è oscillatorio, una sua buona approssimazione nel sottospazio ne produrrà, dopo l'interpolazione, una non molto accurata.
+Poiché l'interpolazione è necessaria nella CGC si può concludere che tale processo è tanto più efficace quanto l'errore di partenza è smooth.
+Questo ci consente di apprezzare la complementarietà delle due fasi del multigrid.
+Il rilassamento su $\Omega_n$, ottenuto con un metodo iterativo classico, elimina velocemente i componenti oscillatori dell'errore lasciando un errore smooth. L'interpolazione lineare, per via della bontà dell'errore, assumendo che il sistema~\eqref{eqn:sistemaErrore} venga risolto in maniera accurata sul sottospazio $\Omega_k$, trasferisce correttamente l'errore all'indietro sul sottospazio $\Omega_n$.\\
+Proprio per il fatto di essere complementari i due metodi, che presi singolarmente richiederebbero un numero elevato di iterazioni per raggiungere la convergenza, combinati insieme risultano particolarmente veloci.
+
+
+\sottosezione{Matrice dei coefficienti}
+
+Quel che rimane da determinare per risolvere l'equazione del residuo~\eqref{eqn:sistemaErrore} nel sottospazio $\Omega_k$ è la matrice dei coefficienti ristretta $A_k$. Tale scelta deriva dalla condizione di Galerkin~\cite{MGM_tutorial}:
+\begin{equation}
+A_k = R_n A_n P_n
+\end{equation}
+
+Adesso che abbiamo definito, in linea di principio, tutti gli strumenti necessari possiamo descrivere formalmente il funzionamento del CGC.\\
+\\
+Sia $\bar{x}_n$ una qualsiasi approssimazione delle soluzione del sistema~\eqref{eqn:sisteman}. Tale approssimazione può essere corretta mediante la seguente procedura:
+
+
+\begin{algorithm}
+\caption{$\bar{x}_n = \text{CGC}(\bar{x}_n,b_n)$}
+\label{alg:CGC}
+\begin{algorithmic}[1]
+\State Calcola il residuo $r_n = b_n - A_n\bar{x}_n$ sullo spazio $\Omega_n$
+\State Restringi il residuo nel sottospazio $\Omega_k$ con $r_k = R_nr_n$
+\State Ricava $A_k = R_n A_n P_n$
+\State Risolvi $e_k = A_k^{-1}r_k$ su $\Omega_k$
+\State Interpola l'errore su $\Omega_n$ con $e_n = P_ne_k$
+\State Correggi l'approssimazione iniziale $\bar{x}_n = \bar{x}_n + e_n$
+\end{algorithmic}
+\end{algorithm}
+
+\sottosezione{Metodo Two-Grid}
+
+Combinando un metodo iterativo classico alla procedura di coarse grid correction è possibile definire il metodo \emph{two grid} (TGM): si applicano prima alcuni passi di un metodo iterativo per ammorbidire l'errore, poi la coarse grid correction ed infine di nuovo alcuni passi di un metodo iterativo, eventualmente anche diverso dal precedente per ammorbidire ulteriore l'errore commesso dalla CGC. Il primo metodo iterativo prende il nome di \emph{pre-smoother} ed il secondo quello di \emph{post-smoother}.
+Data quindi una soluzione iniziale $\bar{x}_0$ se ne può ottenere una migliore $\bar{x}_n$ tramite la seguente procedura:
+\begin{algorithm}
+\caption{$\bar{x}_n = \text{TGM}(\bar{x}_0)$}
+\label{alg:TGM}
+\begin{algorithmic}[1]
+\State Rilassa $\nu_{\text{pre}}$ volte il sistema $A_n \bar{x}_o = b_n$ su $\Omega_n$ ottenendo una approssimazione $\bar{x}_n$
+\State $\bar{x}_n = CGC(\bar{x}_n,b_n)$
+\State Rilassa $\nu_{\text{post}}$ volte il sistema $A_nx_n = b_n$ su $\Omega_n$ partendo dalla soluzione $\bar{x}_n$
+\end{algorithmic}
+\end{algorithm}
+
+\sottosezione{$\mu$-Cycle Scheme}
+
+L'algoritmo~\vref{alg:CGC} lascia aperta un'incombente questione procedurale: come risolvere il sistema del sottospazio
+\begin{equation}
+A_ke_k = r_k
+\end{equation}
+
+La risposta non può che trovarsi nella ricorsione. È facile intuire infatti come sia possibile applicare il TGM anche all'equazione del residuo definita su $\Omega_k$ e portarsi su un nuovo sottospazio $\Omega_p$ di dimensioni inferiori.
+Tale procedura può essere applicata fino ad ottenere un sottospazio $\Omega_l$ di dimensioni sufficientemente piccole, in cui il sistema possa essere risolto in maniera diretta. La soluzione così ottenuta, una volta interpolata, viene utilizzata per correggere l'approssimazione precedente. Questo procedimento viene ripetuto per ogni spazio intermedio fino a ritornare nello spazio di partenza $\Omega_n$.
+
+La procedura si può riassumere come segue:
+\begin{algorithm}
+\caption{$\bar{x}_n = MGM\mu(\bar{x}_i, b_i)$}
+\label{alg:MGM}
+\begin{algorithmic}[1]
+\If{ $(i == L)$ }\Comment{l è l'ultimo livello}
+	\State $b_i = A_i^{-1}x_i$
+\Else
+	\State Rilassa $\nu_{pre}$ volte $A_ix_i =b_i$ partendo da $\bar{x}_i$
+	\State Calcola il residuo $r_i = b_i - A_i \bar{x}_i$
+	\State Applica $r_{i+1} = R_i r_i$
+	\State Chiama $\bar{x}_i = MGM_{\mu}(\bar{x}_{i+1},b_{i+1})$ $\mu$ volte
+	\State Correggi $\bar{x}_i = \bar{x}_i + e_i$
+	\State Rilassa $\nu_{post}$ volte $A_ix_i = b_i$ partendo da $\bar{x}_i$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+Il parametro $\mu$ di questo metodo serve per definire diversi schemi di chiamate ricorsive. Nella pratica si utilizzando solo $\mu = 1$, che produce un V-cycle, e $\mu = 2$ che produce un W-cycle (figura~\vref{fig:cycle}).
+
+
+\fig{Grafica/Cycles.pdf}{Rappresentazione grafica di un V-cycle e di un W-Cycle}{fig:cycle}
+
+

@@ -1,0 +1,269 @@
+\capitolo{Il Porting}
+
+
+Per il porting è stato utilizzato il linguaggio C++ poiché il framework MCFUniPi in cui si va ad inserire è interamente scritto in questo linguaggio.
+La scelta della libreria matematica da utilizzare è ricarduta su Blaze-lib\footnote{\url{https://code.google.com/p/blaze-lib/}}.\\
+\\
+Blaze è una libreria matematica opensource ad alte performance, scritta in C++, che consente di effettuare calcoli con matrici sparse e dense.
+
+Utilizza il paradigma degli \emph{Smart Expression Templates}per combinare l'eleganza del codice e la facilità di utilizzo con performance elevate, rendendola una delle più intuitive e veloci librerie matematiche in C++ disponibili~\cite{blaze_SET}.\\
+\\
+Il seguente esempio mostra come l'implementazione tramite le libreria Blaze del metodo del gradiente coniugato (CG), definita nell'algoritmo~\vref{alg:CG}, sia molto semplice e molto simile alla formulazione matematica.
+\begin{codice}[]
+const size_t NN( N*N );
+
+blaze::CompressedMatrix<double,rowMajor> A( NN, NN );
+blaze::DynamicVector<double,columnVector> x( NN, 1.0 );
+blaze::DynamicVector<double,columnVector> b( NN, 0.0 );
+blaze::DynamicVector<double,columnVector> r( NN );
+blaze::DynamicVector<double,columnVector> p( NN );
+blaze::DynamicVector<double,columnVector> Ap( NN );
+double alpha, beta, delta;
+
+// ... Inizializzazione della matrice sparsa A
+
+// Algoritmo del Gradiente Coniugato
+r = b - A * x;
+p = r;
+delta = (r,r);
+
+for( size_t iteration=0UL; iteration<iterations; ++iteration )
+{
+   Ap = A * p;
+   alpha = delta / (p,Ap);
+   x += alpha * p;
+   r -= alpha * Ap;
+   beta = (r,r);
+   if( std::sqrt( beta ) < 1E-8 ) break;
+   p = r + ( beta / delta ) * p;  
+   delta = beta;
+}
+\end{codice}
+
+È evidente come la parte principale del codice, il loop for, sia molto simile alla formulazione matematica dell'algoritmo rendendo il codice facile da leggere e più manutenibile. Inoltre, proprio per l'utilizzo degli SET, le performance del codice sono molto vicine al picco teorico\footnote{\url{https://code.google.com/p/blaze-lib/wiki/Benchmarks}}.
+
+
+\begin{algorithm}
+\caption{$x = CG(x_0,A,b)$}\label{alg:CG}
+\begin{algorithmic}[1]
+\State $r_0 = b -Ax_0$
+\State $p_0 = r_0$
+\State $k=0$
+\Loop
+	\State $\alpha_k = \frac{r_k^Tr_k}{p_k^TAp_k}$
+	\State $x_{k+1} = x_k + \alpha_kp_k$
+	\State $r_{k+1} = r_k - \alpha_kAp_k$
+	\If ($r_{k+1}$ is sufficiently small)
+		\State exit loop
+	\EndIf
+	\State $\beta_k = \frac{r_{k+1}^Tr_{k+1} }{r_k^Tr_k }$
+	\State $p_{k+1} = r_{k+1} + \beta p_k$
+	\State $k = k+1$
+\EndLoop
+\end{algorithmic}
+\end{algorithm}
+
+
+Il codice di LAMG è scritto in Matlab.
+\\
+Matlab (MATrix LABoratory) è un ambiente di calcolo numerico e un linguaggio di programmazione sviluppato da MathWorks. 
+Matlab consente di manipolare matrici, disegnare grafici e funzioni, implementare algoritmi, creare interfacce utente ed è possibile interfacciarlo con programmi scritti in altri linguaggi, compresi C, C++, Java e Fortran.\\
+\\
+L'applicazione Matlab è costruita intorno al linguaggio Matlab, ed il suo utilizzo principale consiste nell'inserire codice Matlab nella finestra dei comandi, che funge da shell matematica interattiva, o nell'eseguire file testuali che contengono codice Matlab, inclusi script e funzioni.\\
+\\
+È possibile definire variabili utilizzando l'operatore di assegnamento.
+Il linguaggio Matlab è un linguaggio \emph{dinamico} ed è possibile assegnare valori alle variabili senza la necessità di dichiararne il tipo, a meno che non debbano essere trattate come oggetti simbolici, e questo tipo può cambiare.\\
+Matlab supporta inoltre la programmazione ad oggetti e permette di definire classi, derivazione, packages e dispatch virtuale dei metodi.\\
+\\
+LAMG implementa le funzioni più time-consuming in C++, utilizzando i Matlab Executables (\mex files) per interfacciare il codice.
+
+Quando si scrivono programmi in C/C++, si assume sempre che il programma inizi l'esecuzione invocando la funzione \inlinecode{main()}. I \mex files hanno un comportamento simile, poiché iniziano sempre invocando una funzione speciale chiamata mexFunction.
+Questa funzione, la cui firma è riportata in tabella~\vref{code:mexFunction}, svolge il ruolo di gateway tra la chiamata in Matlab e l'effettiva implementazione in C.
+
+\begin{table}
+\caption{La firma della mexFunction}
+\label{code:mexFunction}
+\begin{codice}
+//Si possono usare tutti gli header
+#include "math.h"
+#include "mex.h"   //Si deve includere mex.h
+
+void mexFunction(int nlhs, mxArray *plhs[],\
+					int nrhs, const mxArray *prhs[])
+{
+    //Codice C/C++ della funzione
+	...   
+    return;
+}
+\end{codice}
+\end{table}
+
+Per creare una mexFunction è necessario includere la libreria \inlinecode{mex.h} che contiene tutte le API fornite da Matlab.
+Questa funzione ha quattro parametri che corrispondono al modo in cui si crea una funzione in Matlab:
+\begin{itemize}
+\item \inlinecode{nlhs} è un intero che ci dice il numero di argomenti ``left hand side'', cioè quanti sono i valori che vengono ritornati dalla funzione.
+\item \inlinecode{plhs} è un puntatore ad un array di mxArray che contiene gli argomenti che verranno effettivamente tornati a
+Matlab.
+\item \inlinecode{nrhs} è un intero che indica il numero di parametri della funzione.
+\item \inlinecode{prhs} è un puntatore costante agli argomenti della funzione.
+\end{itemize}
+
+Supponiamo di avere la funzione Matlab \inlinecode{function seq = sequence(X,symA,symB)} e di volerla riscrivere in C.
+Tale funzione prende in input un vettore \inlinecode{X} di lunghezza n e due simboli \inlinecode{symA} e \inlinecode{symB} e ritorna una sequenza di n caratteri consecutivi in cui l'i-esimo simbolo è \inlinecode{symA}, se il corrispondente valore di \inlinecode{X} è pari, oppure \inlinecode{symB} se questo è dispari.
+La corrispondente mexFunction avrà questa forma:
+
+\begin{codice}
+#include "mex.h"
+void mexFunction(int nlhs, mxArray *plhs[],\
+					int nrhs, const mxArray *prhs[]){
+	mwSize i,n;
+
+	n = mxGetN(X_IN); //Dimensione dell'array X
+	plhs[0] = mxCreate(n,mxChar);
+	for(i=0; i<n; i++)
+		plhs[0][i] = (prhs[0][i] % 2 == 0 ) ? prhs[1] : prhs[2];
+\end{codice}
+
+Il codice di questa funzione dovrà poi essere salvato nel file \inlinecode{sequence.c} a cui dovremo anche affiancare un file dal nome \inlinecode{sequence.m}. In questo modo, una volta compilato il file C, quando si invocherà la funzione \inlinecode{sequence} da Matlab, verrà eseguito il codice della mexFunction.
+In questo esempio \inlinecode{nlhs == 1} e \inlinecode{plhs[0]} punta ad un tipo di dato allocato con la chiamata a \inlinecode{mxMalloc()}. 
+Una volta terminata la computazione sarà possibile accedere a quel tipo di dato dall'ambiente Matlab poiché verrà tornato dalla funzione invocata. Inoltre \inlinecode{nrhs == 3} ed i tre indici di \inlinecode{prhs} puntano ad \inlinecode{X}, \inlinecode{symA} e \inlinecode{symB} rispettivamente. In questo modo le strutture dati create nell'ambiente di Matlab sono visibili anche nel codice C.
+È anche possibile accedere direttamente dal codice C a tutte le funzionalità e a tutte le strutture dati che Matlab rende disponibili attraverso le sue API, tramite l'inclusione del file \inlinecode{``mex.h''}.
+
+\sezione{La struttura di LAMG}
+
+\fig{Grafica/PackageLAMG}{Struttura dei package di LAMG}{fig:LAMG}
+
+Il codice di LAMG ha un'architettura complessa, come si può vedere in figura~\vref{fig:LAMG}. Questo perché oltre che poter essere utilizzato come risolutore di sistemi lineari della forma
+\begin{equation*}
+Ax = b
+\end{equation*}
+utilizzando la tecnica del multigrid algebrico è possibile impiegarlo per risolvere il problema di trovare il più piccolo autovalore diverso da $0$ utilizzando l'Exact Interpolation Scheme (EIS)~\cite[§5.4]{lamg_Report}, può essere impiegato come precondizionatore per metodi del PCG.
+
+I sorgenti inoltre contengono classi che rappresentano grafi e ne consentono una visualizzazione a video, classi che consentono di interfacciare LAMG con la University of Florida Sparse Matrix Collection\footnote{\url{http://www.cise.ufl.edu/research/sparse/matrices}}.
+Infine nei sorgenti è disponibile una classe che consente di eseguire test contro altri risolutori che impiegano tecniche analoghe.
+
+Il nostro lavoro si è concentrato sul porting del package \inlinecode{amg}, che contiene l'implementazione di LAMG. Questo è suddiviso nei seguenti subpackage:
+
+\begin{itemize}
+\item \inlinecode{amg.api} che contiene la definizione delle interfacce Builder, HasOptions, HasArgs e IterativeMethod oltre alla definizione della classe Options che contiene tutte le opzioni di default di LAMG.
+\item \inlinecode{amg.coarse} che contiene le definizioni delle interfacce Aggregator, CoarseSet e AggregationStrategy e delle relative implementazioni, che vengono utilizzate durante la fase di aggregation.
+\item \inlinecode{amg.level} che contiene l'implementazione delle strutture dati e delle operazioni utilizzate nella fase di setup per generare i livelli del ciclo multigrid.
+\item \inlinecode{amg.setup} contiene le classi relative alla fase di setup, cioè quelle che consentono di effettuare il coarsening per generare la gerarchia multilivello.
+\item \inlinecode{amg.tv} questo package contiene la definizione di InitialGuess per i test vector, diverse politiche di guessing ed una factory.
+\item \inlinecode{amg.relax} contiene le politiche di rilassamento che vengono utilizzate durante la fase di solve, nella risoluzione del sistema ridotto.
+\item \inlinecode{amg.solve} contiene il SolverLamg, un decorator per SolverLamgLaplacian. Questa classe rende di fatto possibile la risoluzione di problemi in cui la matrice dei coefficienti è almeno simmetrica e a predominanza diagonale (SDD), aumentando il sistema ad una laplaciana.
+\end{itemize}
+
+I sorgenti di LAMG infine, sono corredati da esempi tipici di utilizzo. Di seguito si riporta quello che meglio corrisponde alle necessità di MCFUniPi, in cui cioè la matrice dei coefficienti è una laplaciana.
+
+\begin{codice}[commandchars=\\\{\}]
+g = Graphs.grid('fd', [40 40], 'normalized', true);
+A = g.laplacian;
+%Fase di setup \label{code:beginSetup}
+inputType = 'laplacian';
+solver = 'lamg';
+lamg    = Solvers.newSolver(solver, 'randomSeed', 1);\label{code:factory}
+setup   = lamg.setup(inputType, A);\label{code:setup}
+
+%Fase di solve
+b = rand(size(A,1), 1);
+b = b - mean(b);
+[x, ~, ~, details] = lamg.solve(setup, b, 'errorReductionTol', 1e-8);
+\end{codice}
+
+\sezione{Architettura di LAMGLSSolver}
+
+Il solver implementato ha la struttura riportata in figura~\vref{fig:classiLAMG}
+
+\fig{Grafica/ClassiLAMG}{Diagramma UML delle classi di LAMGLSSolver}{fig:classiLAMG}
+
+La classe \inlinecode{MtxOps} contiene tutte le operazioni sulle matrici che non sono, o non erano, implementate direttamente dalla libreria Blaze, come ad esempio l'estrazione di sottomatrici di una matrice data, di sottovettori e la norma-2 di un vettore.
+\\
+La classe \inlinecode{Encapsulator} ha lo scopo di contenere una matrice di un tipo arbitrario, scelto tra sparsa e densa. 
+Tale necessità insorge dal momento che la matrice dei coefficienti $A^l$, che per il livello $l=1$ è sparsa, tende a densificarsi durante il processo di coarsening e non è possibile sapere a priori quale sarà il livello $l$ in cui sarà necessario, per motivi di prestazioni, passare da una matrice sparsa ad una densa.\\
+A supporto di tale decisione viene utilizzato il metodo \inlinecode{isSparseOK()} che controlla, ad ogni costruzione di livello, se è il momento di passare all'utilizzo delle matrici dense.\\
+Il criterio utilizzato tiene conto del numero dei nonzero della matrice. Quando questi superano o si avvicinano al $50\%$ del numero totale degli elementi conviene passare all'utilizzo delle matrici dense\footnote{K. Iglberger, conversazione privata.}.
+
+\sottosezione{LAMGLSSolver}
+
+L'implementazione della classe \inlinecode{LAMGLSSolver} ha rappresentato la parte più consistente del lavoro.
+Questa classe è una specializzazione diretta della classe \inlinecode{MCFLSSolver} discussa nel capitolo~\vref{cap:Framework} ed implementa un risolutore di sistemi lineare nella forma
+\begin{equation*}
+Ax = b
+\end{equation*}
+utilizzando le tecniche del multigrid algebrico visto nel capitolo~\vref{cap:LAMG}.
+In particolare
+\begin{itemize}
+\item ridefinisce quei metodi la cui implementazione base, nella classe padre, non è sufficiente;
+\item implementa il metodo \inlinecode{SolveADAT()} presente in \inlinecode{MCFLSSolver};
+\item implementa le strategie di coarsening di LowDegreeElimination ed Aggregation.
+\end{itemize}
+
+Di seguito vengono descritti i metodi e le strutture dati implementati, soffermandosi sugli aspetti più importanti ed evidenziandone le caratteristiche principali.
+
+\subsubsection{bool SetD()}
+Questo metodo viene invocato dopo il metodo \inlinecode{SetGraph()}, nel quale si ricevono le informazioni circa la topologia del grafo, e riceve come input il peso di ciascun arco.
+Con queste informazioni è possibile costruire la matrice Laplaciana del primo livello e, a partire da questa, generare l'intera gerarchia del multigrid.
+
+Tale compito viene delagato al metodo privato \inlinecode{buildMultigrid()} il cui comportamento è riassunto in figura~\vref{figurinaBellina}.
+
+\fig{Grafica/diagrammaCreazioneMultigrid}{Diagramma di flusso della fase di setup}{figurinaBellina}
+
+Allo stato Eliminate corrisponde una chiamata al metodo privato \inlinecode{coarsenElimination()} mentre a quello Aggregate il metodo \inlinecode{coarsenAggregation()}.
+
+La procedura si interrompe se dopo la creazione di un qualsiasi livello viene tornato \inlinecode{true} dal metodo \inlinecode{isrelaxationFast()}.
+
+\subsubsection{Level* coarsenElimination()}
+
+Questo metodo implementa la strategia di coarsening Eliminate che corrisponde all'algoritmo~\vref{alg:Elimination}.
+Provvede quindi ad individuare gli eventuali nodi lowdegree e ad eliminarli, costruendo la nuova matrice dei coefficienti per mezzo del Galerkin coarsening.
+Se per questa matrice è stato possibile eliminare nodi allora viene restituito un nuovo livello, contenente la matrice appena calcolata e una copia della matrice di proiezione così costruita, e questo viene aggiunto alla gerarchia multigrid.\\
+Altrimenti viene tornato \inlinecode{NULL}. In ogni caso si procede ad aggregare i nodi rimasti. 
+
+\subsubsection{Level* coarsenAggregation()}
+
+uesto metodo implementa la strategia di coarsening Aggregate che corrisponde all'algoritmo~\vref{alg:Aggregate}.
+
+Provvede quindi a calcolare le affinity tra i vari nodi del grafo e ad effettuare $n=2$ stage di Aggregazione selezionando poi l'insieme aggregato migliore.
+Se al termine di questa procedura non è stato possibile aggregare dei nodi o se la migliore aggregazione individuata non è stata soddisfacente, perché ad esempio riduceva il numero di nodi di un fattore troppo piccolo, il metodo ritorna \inlinecode{NULL} ed il coarsening termina.
+Altrimenti restituisce un nuovo livello che viene aggiunto al multigrid. Si prosegue quindi nella costruzione del multigrid tentanto di eliminare di nuovo eventuali nodi lowdegree presenti nel nuovo grafo.
+
+Questi metodi sono stati implementati come metodi template poiché, come detto, non è possibile conoscere a priori se la matrice dei coefficienti da analizzare sarà di tipo denso o sparso.
+É stato comunque implementata una versione specializzata per ciascuno di questi tipi di matrici, al fine di ottimizzare alcune procedure.
+
+\subsubsection{Gerarchia dei Livelli}
+
+Per implementare i livelli del multigrid si è deciso di utilizzare la gerarchia di classi riportata in figura~\vref{label2}.
+
+\fig{Grafica/gerarchiaClassiLivello}{Diagramma UML}{label2}
+
+La classe \inlinecode{Level} fornisce una interfaccia ed una implementazione di default dei metodi comuni a tutti i livelli.
+I metodi \inlinecode{restrict()}, \inlinecode{interpolate()}, \inlinecode{coarseType} e \inlinecode{relax()} vengono utilizzati durante la fase di solve e corrispondono alle omonime operazioni.
+I metodi \inlinecode{canCoarsen()} e \inlinecode{isRelaxationFast()} determinano, durante la fase di setup, se è possibile e conveniente proseguire con la costruzione del multigrid.
+
+Ciascuna specializzazione sovrascrive i metodi per i quali è necessario ridefinire il comportamento. Ognuna di queste sottoclassi corrisponde ad un livello creato con l'omonima strategia di coarsening, mentre il livello \inlinecode{LevelFinest} corrisponde al sistema di partenza.
+
+\subsubsection{LSSStatus SolveADAT()}
+
+Questa procedura utilizza il metodo privato \inlinecode{solveCycle()} per eseguire uno o più cicli multigrid al fine di individuare la soluzione.\\
+In particolare
+\begin{itemize}
+\item applica un'iterazione multigrid utilizzando i metodi forniti dalla gerarchia di classi \inlinecode{Level}.
+\item controlla se l'approssimazione corrente della soluzione ha raggiunto la precisione desiderata;
+\item se ciò accade, e se non ha esaurito la risorsa tempo a lui assegnata, effettua un altro ciclo.
+\end{itemize}
+
+La precisione desiderata viene raggiunta se e quando viene verificata la seguente condizione:
+\begin{equation}
+\label{eqn:Prcsn}
+|b - A\bar{x}_n | \leq Prcsn
+\end{equation}
+
+dove $Prcsn$ è un vettore che viene passato al risolutore invocando il metodo \inlinecode{SetPrcsn()}.
+
+Se la condizione~\eqref{eqn:Prcsn} è verificata il metodo deve ritornare \inlinecode{kOk} e copiare la soluzione nel parametro \inlinecode{Res}.
+Altrimenti il metodo può riapplicare una nuova iterazione di multigrid usando come approssimazione iniziale l'approssimazione appena individuata.\\
+\\
+Può accadere che il solver non possa eseguire altre iterazoni poiché ha esaurito la risorsa tempo che gli è stata assegnata: in tal caso deve tornare \inlinecode{kLwPrcsn}.
+Il chiamante, nel nostro caso l'algoritmo IP, ha la possibilità di invocare di nuovo il metodo \inlinecode{SolveADAT()} se ritiene di necessitare di una soluzione migliore, concedendo di fatto al solver un'ulteriore iterazione.
+Se dopo questa chiamata non è stato possibile raggiungere la precisione desiderata si deve tornare \inlinecode{kNError}.

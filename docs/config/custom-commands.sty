@@ -1,0 +1,128 @@
+
+ % Web Links
+\newcommand{\wlink}[1]{\href{#1}{#1}}
+
+\newcommand{\inglese}[1]{\emph{#1}}
+
+% Comando per i riferimenti ai label interni di LaTeX (paragrafi, tabelle, imamgini, ...)
+\usepackage[italian]{varioref} %Per usare il comando \vref
+\newcommand{\rif}[1]{\vref{#1}}
+
+%%%%%%% Siccome non so che documentclass userò, definisco questi comandi %%%%%%%%%%%
+%%%% La docclass finale sarà book e questi diverranno chapter,section,subsection %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Con book è così %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\capitolo}[1]{\chapter{#1}}				%Quello a più alto livello 
+\newcommand{\sezione}[1]{\section{#1}} 			%Divide i capitoli
+\newcommand{\sottosezione}[1]{\subsection{#1}}	%Divide le sezioni
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Con article è così %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newcommand{\capitolo}[1]{\section{#1}}				%Quello a più alto livello 
+%\newcommand{\sezione}[1]{\subsection{#1}} 			%Divide i capitoli
+%\newcommand{\sottosezione}[1]{\subsubsection{#1}}	%Divide le sezioni
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% L'altra cosa da cambiare è l'injection della bibliografia nel file Bibliografia.tex
+% ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
+% Dunque questi comandi vanno cambiati in accordo con il documentclass.
+% Così facendo però dovrò cambiar solo tre righe invece di N.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Una immagine (img) è una roba che sta dentro il testo. Si usa così
+% \img{sorgenteDellaFigura}{width}
+\newcommand{\img}[2]{%
+\includegraphics[width=#2]{#1}%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Una figura (fig) invece è una cosa flottante, che "contiene" una img.
+%LaTeX può metterla dove gli pare. Si usa così
+% \fig{sorgenteDellaFigura}{caption}{label} 
+\newcommand{\fig}[3]{%
+\begin{figure}%
+\centering
+\img{#1}{0.8\textwidth}%
+\caption{#2}%
+\label{#3}%
+\end{figure}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Una figura di TiKz (tikzfig) è la solita cosa flottante che contiene però un input
+% di file latex che rappresenta un'immagine da generare con TiKz.
+% Si usa così:
+% \tikzfig{sorgenteDellaFigura}{caption}{label} 
+%\newcommand{\tikzfig}[3]{%
+%\begin{figure}%
+%\caption{#2}%
+%\label{#3}%
+%\centering
+%\input{#1}%
+%\end{figure}%
+%}
+%^^^ Queste sono quelle fuori testo, cioè flottanti :)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Insiemi Numerici R e R+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\numberset}{\mathbb}
+\newcommand{\R}{\numberset{R}}
+\newcommand{\Rp}{\numberset{R^{+}}} %R+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%% Roba di grafi (Nodes,Edges,Weight) %%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\graphset}{\mathcal}
+\newcommand{\N}{\graphset{N}} %Nodi
+\newcommand{\E}{\graphset{E}} %Archi
+\newcommand{\w}{w} %Costi
+\newcommand{\F}{\graphset{F}} %Nodi che vengono eliminati
+\newcommand{\C}{\graphset{C}} %Nodi che rimangono
+\newcommand{\T}{\graphset{T}} %
+\newcommand{\Z}{\graphset{Z}}
+\newcommand{\U}{\graphset{U}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%% Roba di matrici %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\matr}{\mathbf} %Per indicare le matrici e i vettori
+\newcommand{\per}{\times} % Quando vuoi scrivere N x N.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Un po' di matrici famose
+\newcommand{\A}{\matr{A}} %La matrice dei termini noti
+\newcommand{\Pp}{\matr{P}} %La matrice di interpolazione tra due livelli
+\newcommand{\Q}{\matr{Q}} %???
+\newcommand{\Pie}{\matr{\Pi}} %La matrice PiGrecoMaiuscolo
+\newcommand{\0}{\matr{0}} %La matrice tutti zero
+\newcommand{\I}{\matr{I}} %L'identità
+\newcommand{\Rr}{\matr{R}}
+%%%%%%%%%%%%%%%%%%%%%%%%% Robe da linguista %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\acapo}{\mbox{}}
+\newcommand{\acr}{} %Se vuoi stampre acronimi in altro modo
+\newcommand{\eng}[1]{#1} 
+%Per ora non mi interessa, dopo lo decommenterò
+%\newcommand{\traduci}[1]{#1 <<TRADUCI}
+\newcommand{\traduci}[1]{#1} %<-SOSTITUIRE^
+
+\newcommand{\argmin}[1]{\underset{#1}{\operatorname{argmin}}\,}
+\newcommand{\argmax}[1]{\underset{#1}{\operatorname{argmax}}\,}
+\newcommand{\undermax}[1]{\underset{#1}{\operatorname{\max}}\,}
+\newcommand{\undermin}[1]{\underset{#1}{\operatorname{\min}}\,}
+%%Per avere \abs e \norma come delimitatori graficamente corretti
+
+%Forse sto esagerando coi comandi o.O
+\newcommand{\mex}{\textsc{mex }}
+
+%%%%%%%%%%%%%%%%%%%%%%%%% AMBIENTE PER IL CODICE %%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{codice}[label=Label] permette di scrivere codice in un box
+\DefineVerbatimEnvironment{codice}{Verbatim}{numbers=left, frame=single, numbersep=2pt, tabsize=4}
+\newcommand{\commento}[1]{\textit{#1}} % Per commentare dentro verbatim
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\inlinecode}[1]{\texttt{#1}} % Per scrivere piccole porzioni di codice dentro i discorsi
+\newenvironment{sistema}%
+  {\left\lbrace\begin{array}{@{}l@{}}}%
+  {\end{array}\right.}
+
+%%Per avere immagine di sfondo al centro della pagina e fare un frontespizio figo
+\newcommand\AlCentroPagina[1]{%
+\AddToShipoutPicture*{\AtPageCenter{%
+\makebox(0,0){\includegraphics%
+[width=0.9\paperwidth]{#1}}}}}

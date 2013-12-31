@@ -1,0 +1,78 @@
+%%%%%%%%%%%%%%%%% Classe che determina il tipo di documento %%%%%%%%%%%%%%%%%%%%%%
+%\documentclass[a4paper,12pt,twoside,titlepage]{article}
+\documentclass[a4paper,12pt,openright,twoside,titlepage]{report}
+% draft <-> final Per stampare quadratini dove c'è overfull
+% oneside <-> twoside Per foglio singolo, fronte/retro
+% open{any<->right} Apre nuova sezione su any o a destra
+% {no}titlepage Se vuoi pagina bianca dopo il titolo o meno
+% twocolumn Per avere il documento su due colonne
+% 10,11,12pt Dimensione del font
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% File Che contiene nuovi comandi definiti da me e altre impostazioni
+% Per aggiungere un nuovo comando/pacchetto/roba "globale" aggiungerla
+% in questo file.
+\usepackage{config/impostazioni-tesi}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%% Qualche comandino ganzo pronto per l'uso %%%%%%%%%%%%%%%%%%%%%
+%	* \input{RelativePath/NoSpaces/File.tex} -> Include il file
+%	* Comandi per le citazioni:
+%	**	\textcite	-> quando la citazioneè parte integrante del discorso;
+%	**	\parencite	-> racchiude la citazione fra parentesi;
+%	**	\footcite	-> mette la citazione in una nota;
+%	**	\supercite	-> (solo per schemi numerici) mette la citazione in apice;
+%	**	\fullcite	-> mette come citazione l’intera voce bibliografica.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%% Convenzioni che voglio adottare nel documento %%%%%%%%%%%%%%%%%%%
+% Il comando \label va usato come segue:
+%	* Ogni elemento di suddivisione logica avrà la sua label di riconoscimento
+%	  e le label saranno fatte così:
+%		\label{sec:RiferimentoSectionEsterna} per le sezioni di livello maggiore
+%		\label{sec:RiferimentoSezioneEsterna:Sottosezione}
+%		\lbale{sec:RiferimentoSezioneEsterna:Sottosezione:Sotto-Sottosezione}
+%	* Ogni tabella avrà la sua label di riconoscimento e le label saranno
+%	  fatte così:
+%		\label{tbl:RiferimentoDellaTabella}
+%	* Ogni immagine avrà la sua label che sarà così:
+%		\label{fig:RiferimentoDellaFigura}
+%	* Ogni equazione avrà la sua label che sarà così:
+%		\label{eqn:LabelDellaEquazione}
+%		N.B: le equazioni si riferiscono con \eqref
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+%\frontmatter %<< questa c'è con book
+\input{TitlePage}
+
+\tableofcontents %Indice
+%\listoffigures %Indice delle figure
+%\listoftables %Indice delle tabelle
+% Lo faccio l'abstract?
+%\input{Capitoli/Sommario}
+%%%^^^^^^^^^^^^^^^^^^^^^^
+%%Comunque tra frontmatter e mainmatter ci vanno ste robe qui^^
+
+%\mainmatter %<< questa c'è con book
+%%Introduzione dove parlo di MinCostFlow e InteriorPoint
+\input{Introduzione}
+
+\input{LAMG}
+
+\input{IlFrameworkMCFUNIPI}
+
+\input{IlPorting}
+
+\input{Conclusioni}
+\clearpage
+
+%\input{Capitoli/ParteNuova/risultatiLavoro} %Risultati finali
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{Bibliografia} %Per stampare fisicamente la bibliografia
+% ^^^^ Cambia in base alla documentclass
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

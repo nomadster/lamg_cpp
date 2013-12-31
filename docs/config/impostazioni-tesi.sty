@@ -1,0 +1,82 @@
+
+%%%%%%%%%%%%%%%%% Per cambiare i margini di default %%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[big]{layaureo}
+%^^^ Accetta le opzioni 
+%		bindings=xx Per i margini (va bene qualsiasi unità di misura LaTeX)
+%		big Per avere la pagina ancora più grossa
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%= = = = = = = Decommentami se vuoi l'indice analitico = = = = = = =
+%\usepackage{makeidx} %Indice analitico
+%\makeindex
+% Poi nel testo si usa con parola\index{parola}
+%= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+\usepackage[T1]{fontenc}		% imposta la codifica dei font
+\usepackage[utf8]{inputenc}		% lettere accentate da tastiera
+\usepackage[italian]{babel}		% per scrivere in italiano
+%\usepackage{lipsum}				% genera testo fittizio
+\usepackage{url}				% per scrivere gli indirizzi Internet
+
+\usepackage[babel]{csquotes}	%Per le citazioni
+
+%%%%%%%%%%% Per la bibliografia usando il file .bib unico %%%%%%%%%%%%%
+\usepackage[style=numeric-comp,backend=biber]{biblatex} 
+%,backend=biber se si vuole usare biber. Per ora non sono riuscito a farlo andare
+% numeric-comp cita numericamente raggruppando le fonti quando sono
+% sequenziali. Esempio: [1],[2],[3],[5] diventa [1-3],[5]
+\bibliography{Bibliografia} % Carica la bibliografia dal file .bib
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%% Dati per il titolo %%%%%%%
+%\author{Alessandro Lensi} %- 297110}%Serve la Matricola?!
+%\title{Bozza della tesi}
+%\date{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{amsfonts} %Font matematici!
+\usepackage{amsmath} %Per le formule e la matematica!
+\usepackage{amssymb} %Per i simboli matematici avanzati (Es. mathbb)
+
+
+\usepackage{mathtools} %Per avere abs e norm corretti!
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norma}{\lVert}{\rVert}
+
+\usepackage{graphicx} %Per includere figure!!
+
+
+\usepackage{fancyvrb} %Fancy Verbatim
+\usepackage{booktabs} %Per usare \{top,mid,bottom}rule
+\usepackage{braket} %Per le parentesi fighe
+
+%%%%% Per lo psuedocodice
+%\usepackage{algorithmicx} %Non serve caricarlo, viene caricato da algpseudocode :)
+\usepackage{algorithm} %Questo fa le tabelle belline per lo pseudocodice
+\usepackage{algpseudocode} %Questo definisce i comandi ganzi dello pseudocodice
+%%%%%%%
+
+%%%%%%%%%%%%%%%%%% QUESTO PACCHETTO VA CARICATO PER ULTIMO %%%%%%%%%%%%%%%%%%%%%
+\usepackage{bookmark}
+\usepackage{hyperref}	% Rende i reference cliccabili sul pdf
+%\hypersetup{colorlinks}	% Links colorati. Vedere manuale per cambiare colori
+% Usare \hypersetup{} per indicare eventuali opzioni di hyperref
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+% Questo file l'ho definito io e ci definirò, se serviranno
+% degli hyphen personalizzati in caso di overflow delle parole dai box
+\usepackage{config/custom-hyphenation}
+\usepackage{config/custom-commands}
+%%%%% ^^^ Vanno inclusi per ultimi visto che in custom-commands definisco comandi che potrebbero usare i pacchetti di sopra
+
+\usepackage{eso-pic} %%Per l'immagine a centro pagina del frontespizio
+\usepackage{indentfirst} %%%Mi indenta i primirighi dei paragrafi così è più bello
+\usepackage{mathrsfs}
+\usepackage[mathscr]{eucal}
+
+\usepackage{caption}
+\captionsetup{tableposition=top,figureposition=bottom,font=small}
+\usepackage{tabularx}
+\usepackage{subfig}
